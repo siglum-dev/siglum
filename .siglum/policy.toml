@@ -1,0 +1,14 @@
+# Siglum's own gate policy. Siglum gates its own pull requests with it.
+#
+# This is the dry-run / Standard posture: one read-only validator, and independence
+# is not required, so the gate runs in normal CI and posts a non-required check. The
+# Sealed upgrade (an org-pinned gate identity, a required source-restricted check, and
+# signing) adds an [gate_identity] block and is described in docs/publish-gate.md.
+policy_id = "siglum-self"
+version = 1
+independence_required = false
+
+[[validators]]
+id = "secret-scan"
+version = "0"
+required = true

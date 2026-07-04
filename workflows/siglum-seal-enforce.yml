@@ -1,0 +1,71 @@
+# TRUSTED seal-enforce job. It is org-controlled and base-pinned. This is the Sealed tier.
+#
+# Authority isolation: this job holds id-token:write and checks:write but
+# never checks out head code. It consumes the gather job's results, verifies their digest,
+# anchors all policy inputs to the protected base, recomputes the verdict, and posts a
+# source-restricted App check-run. No untrusted code runs in a token-holding job.
+#
+# Status: the wired command (siglum.gate.run) anchors, derives, verifies, binds, concludes,
+# and posts the check-run. Because the App credentials are present, this is the Sealed tier:
+# the gate also signs the attestation with Sigstore (staging today) and self-verifies the
+# bundle before any green check, and any signing failure fails closed.
+#
+# Deploy this as an org-required reusable workflow, ref-pinned to a tag the org controls, not
+# a ref the PR head can edit. The ruleset must source-restrict the 'siglum' check.
+name: siglum-seal-enforce
+on:
+  workflow_call:
+    inputs:
+      results_artifact:
+        type: string
+        required: true
+      results_digest:
+        type: string
+        required: true
+    secrets:
+      SIGLUM_GITHUB_APP_ID:
+        required: true
+      SIGLUM_GITHUB_APP_INSTALLATION_ID:
+        required: true
+      SIGLUM_GITHUB_APP_PRIVATE_KEY:
+        required: true
+
+permissions:
+  id-token: write         # keyless Fulcio signing + the gate's own verified OIDC identity
+  checks: write           # post the App check-run
+  issues: write           # upsert the PR explanation comment
+  contents: read          # read base-pinned policy and anchored inputs
+
+jobs:
+  seal-enforce:
+    runs-on: ubuntu-latest        # require_hosted_runner() also enforces this in code
+    env:
+      SIGLUM_PACKAGE_SPEC: ${{ vars.SIGLUM_PACKAGE_SPEC }}
+      SIGLUM_GITHUB_APP_ID: ${{ secrets.SIGLUM_GITHUB_APP_ID }}
+      SIGLUM_GITHUB_APP_INSTALLATION_ID: ${{ secrets.SIGLUM_GITHUB_APP_INSTALLATION_ID }}
+      SIGLUM_GITHUB_APP_PRIVATE_KEY: ${{ secrets.SIGLUM_GITHUB_APP_PRIVATE_KEY }}
+    steps:
+      # No actions/checkout of head. Policy and anchored inputs are read at base_sha via the
+      # GitHub contents API (forge/github.py), not from a head checkout. The action is pinned
+      # by commit digest (the comment records the release).
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c   # v8.0.1
+        with:
+          name: ${{ inputs.results_artifact }}
+      - name: verify evidence digest
+        # results_digest comes from the UNTRUSTED gather job, so it is passed through env
+        # (treated as data, not code) and format-checked before use. Interpolating
+        # ${{ inputs.* }} straight into a run script would be a template-injection vector.
+        env:
+          RESULTS_DIGEST: ${{ inputs.results_digest }}
+        run: |
+          if ! [[ "$RESULTS_DIGEST" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "results_digest is not a sha256 hex string" >&2
+            exit 1
+          fi
+          printf '%s  results.json\n' "$RESULTS_DIGEST" | sha256sum -c -
+      - name: enforce
+        run: |
+          python -m pip install "${SIGLUM_PACKAGE_SPEC:?set SIGLUM_PACKAGE_SPEC to an installable Siglum source}"
+          # anchor inputs to base -> fill missing required validators as UNKNOWN ->
+          # assess + verify -> bind run -> conclude -> post the source-restricted App check-run.
+          python -m siglum.gate.run --results results.json

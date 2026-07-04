@@ -1,0 +1,47 @@
+# UNTRUSTED gather job. It runs over HEAD, which is where a Miasma attacker operates.
+# It produces evidence only. It cannot assert a verdict, sign, or post a check.
+#
+# The permissions are the point: contents:read only, no id-token, no secrets. Anything the
+# attacker edits in head (a test script, a scanner config) affects only this job's output,
+# which the trusted job consumes as untrusted, digest-pinned evidence.
+name: siglum-gather
+on:
+  workflow_call:
+    outputs:
+      results_digest:
+        description: sha256 of the uploaded validator results
+        value: ${{ jobs.gather.outputs.results_digest }}
+
+permissions:
+  contents: read          # nothing else: no id-token: write, no checks: write
+
+jobs:
+  gather:
+    runs-on: ubuntu-latest        # github-hosted; the seal job enforces this
+    env:
+      # An installable Siglum package source the secret-free gather job can read.
+      SIGLUM_PACKAGE_SPEC: ${{ vars.SIGLUM_PACKAGE_SPEC }}
+      # Event values are passed through env (treated as data, not code), the same
+      # injection discipline the seal workflow applies to results_digest.
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    outputs:
+      results_digest: ${{ steps.run.outputs.results_digest }}
+    steps:
+      # Pinned by commit digest, not a movable tag: these workflows are the gate's own
+      # supply chain. The comment records the release the digest was taken from.
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0   # v7.0.0
+        with:                             # checks out HEAD (untrusted)
+          fetch-depth: 0                  # the changed-files diff needs base history
+      - id: run
+        run: |
+          python -m pip install "${SIGLUM_PACKAGE_SPEC:?set SIGLUM_PACKAGE_SPEC to an installable Siglum source}"
+          # Run the built-in read-only validators over the PR's changed files and emit
+          # ValidatorResult JSON plus artifact digests. No verdict is computed here.
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > changed-files.txt
+          python -m siglum.validators.run --changed-files changed-files.txt --out results.json
+          echo "results_digest=$(sha256sum results.json | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a   # v7.0.1
+        with:
+          name: siglum-results
+          path: results.json

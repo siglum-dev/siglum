@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Siglum · Open Source</title>
+<style>
+  :root {
+    --bg: oklch(15% 0.018 235);
+    --panel: oklch(20% 0.018 235);
+    --panel-2: oklch(24% 0.02 235);
+    --paper: oklch(92% 0.018 86);
+    --muted: oklch(70% 0.025 250);
+    --line: oklch(92% 0.018 86 / 0.16);
+    --line-soft: oklch(92% 0.018 86 / 0.08);
+    --green: oklch(78% 0.15 165);
+    --red: oklch(70% 0.17 34);
+    --blue: oklch(68% 0.14 250);
+    --yellow: oklch(80% 0.12 86);
+    --violet: oklch(71% 0.13 305);
+    --shadow: 0 24px 80px oklch(8% 0.018 235 / 0.38);
+    --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --serif: Georgia, "Times New Roman", serif;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px),
+      var(--bg);
+    background-size: 44px 44px;
+    color: var(--paper);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .deck { position: fixed; inset: 0; }
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 82px 88px 74px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 280ms ease;
+  }
+  .slide.active { opacity: 1; visibility: visible; }
+  .frame {
+    width: min(1160px, 100%);
+    min-height: 520px;
+    display: grid;
+    align-content: center;
+  }
+  .frame.top { align-content: start; }
+
+  .tabs {
+    position: fixed;
+    z-index: 20;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 88px;
+    background: linear-gradient(180deg, var(--bg), transparent);
+  }
+  .tab {
+    color: var(--muted);
+    font: 600 12px var(--mono);
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    padding: 10px 0 8px;
+    cursor: pointer;
+  }
+  .tab.active { color: var(--paper); border-bottom-color: var(--green); }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    color: var(--paper);
+    font: 700 24px var(--serif);
+  }
+  .mark {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--green);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    box-shadow: inset 0 0 0 8px oklch(78% 0.15 165 / 0.08);
+  }
+  .mark::before {
+    content: "";
+    width: 18px;
+    height: 10px;
+    border-left: 2px solid var(--green);
+    border-bottom: 2px solid var(--green);
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
+
+  .kicker {
+    margin: 0 0 18px;
+    color: var(--green);
+    font: 700 13px var(--mono);
+  }
+  .kicker.red { color: var(--red); }
+  .kicker.blue { color: var(--blue); }
+  .kicker.yellow { color: var(--yellow); }
+  .kicker.muted { color: var(--muted); }
+
+  h1, h2, h3, p { margin: 0; }
+  h1 {
+    max-width: 980px;
+    font: 700 86px/0.98 var(--serif);
+  }
+  h2 {
+    max-width: 980px;
+    font: 700 66px/1.02 var(--serif);
+  }
+  h3 {
+    max-width: 930px;
+    font: 700 46px/1.08 var(--serif);
+  }
+  .lede {
+    max-width: 740px;
+    margin-top: 26px;
+    color: var(--muted);
+    font-size: 23px;
+    line-height: 1.45;
+  }
+  .tight { max-width: 600px; }
+  .wide { max-width: 860px; }
+  em, .paper { color: var(--paper); font-style: italic; }
+  .green { color: var(--green); }
+  .red { color: var(--red); }
+  .blue { color: var(--blue); }
+  .yellow { color: var(--yellow); }
+  .violet { color: var(--violet); }
+
+  .note {
+    margin-top: 16px;
+    color: var(--muted);
+    font: 14px/1.55 var(--mono);
+  }
+  .note strong { color: var(--paper); }
+  code, .mono { font-family: var(--mono); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 34px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 34px;
+  }
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 34px;
+  }
+  .panel {
+    min-height: 166px;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+  }
+  .panel.clean { box-shadow: none; background: transparent; }
+  .panel.green { border-color: oklch(78% 0.15 165 / 0.55); }
+  .panel.red { border-color: oklch(70% 0.17 34 / 0.55); }
+  .panel.blue { border-color: oklch(68% 0.14 250 / 0.55); }
+  .panel.yellow { border-color: oklch(80% 0.12 86 / 0.55); }
+  .panel h4 {
+    margin: 0 0 12px;
+    color: var(--paper);
+    font: 700 17px/1.25 var(--sans);
+  }
+  .panel p {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  .panel .mini {
+    margin-top: 12px;
+    color: var(--paper);
+    font: 12px/1.6 var(--mono);
+  }
+  .caption {
+    color: var(--muted);
+    font: 12px/1.55 var(--mono);
+    margin-top: 12px;
+  }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel-2);
+    font: 13px/1.35 var(--mono);
+  }
+  .status-row + .status-row { margin-top: 7px; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 86px;
+    min-height: 28px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--paper);
+    font: 700 11px var(--mono);
+  }
+  .pill.good {
+    color: var(--green);
+    border-color: oklch(78% 0.15 165 / 0.45);
+    background: oklch(78% 0.15 165 / 0.08);
+  }
+  .pill.bad {
+    color: var(--red);
+    border-color: oklch(70% 0.17 34 / 0.48);
+    background: oklch(70% 0.17 34 / 0.08);
+  }
+  .pill.wait {
+    color: var(--yellow);
+    border-color: oklch(80% 0.12 86 / 0.45);
+    background: oklch(80% 0.12 86 / 0.08);
+  }
+  .mini-title {
+    margin: 0 0 14px;
+    color: var(--paper);
+    font: 700 15px var(--mono);
+  }
+  .diagram {
+    display: grid;
+    gap: 12px;
+    margin-top: 34px;
+  }
+  .rail {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    align-items: stretch;
+  }
+  .rail.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .rail.seven { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .rail-step {
+    min-height: 118px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 15px;
+    background: var(--panel);
+    position: relative;
+  }
+  .rail-step::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -11px;
+    width: 11px;
+    height: 1px;
+    background: var(--line);
+  }
+  .rail-step:last-child::after { display: none; }
+  .rail-step b {
+    display: block;
+    color: var(--paper);
+    margin-bottom: 8px;
+    font-size: 16px;
+  }
+  .rail-step span {
+    display: block;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  .rail-step.hot { border-color: oklch(78% 0.15 165 / 0.55); }
+  .rail-step.danger { border-color: oklch(70% 0.17 34 / 0.55); }
+  .rail-step.gate { border-color: oklch(80% 0.12 86 / 0.7); background: oklch(80% 0.12 86 / 0.07); }
+  .callout {
+    margin-top: 16px;
+    padding: 15px 18px;
+    border: 1px solid oklch(80% 0.12 86 / 0.48);
+    border-radius: 6px;
+    background: oklch(80% 0.12 86 / 0.08);
+    color: var(--paper);
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .fix-map {
+    display: grid;
+    gap: 12px;
+    margin-top: 30px;
+  }
+  .fix-row {
+    display: grid;
+    grid-template-columns: 1fr 120px 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  .fix-row > div {
+    min-height: 76px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+    background: var(--panel);
+  }
+  .fix-row .bad-side { border-color: oklch(70% 0.17 34 / 0.45); }
+  .fix-row .good-side { border-color: oklch(78% 0.15 165 / 0.45); }
+  .fix-row .arrow-mid {
+    min-height: 42px;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font: 700 12px var(--mono);
+    background: transparent;
+    border: 0;
+  }
+  .fix-row b {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 15px;
+  }
+  .fix-row span {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .list {
+    display: grid;
+    gap: 13px;
+    margin-top: 34px;
+    max-width: 840px;
+  }
+  .item {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    color: var(--paper);
+    font-size: 22px;
+    line-height: 1.35;
+  }
+  .bullet {
+    flex: none;
+    width: 34px;
+    color: var(--green);
+    font: 700 16px var(--mono);
+  }
+  .item.bad .bullet { color: var(--red); }
+  .item span:last-child { max-width: 780px; }
+
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 34px;
+  }
+  .node {
+    min-height: 132px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+    padding: 15px;
+    position: relative;
+  }
+  .node::after {
+    content: "";
+    position: absolute;
+    right: -13px;
+    top: 50%;
+    width: 16px;
+    height: 1px;
+    background: var(--line);
+  }
+  .node:last-child::after { display: none; }
+  .node b { font-size: 18px; }
+  .node small {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+    font: 12px/1.4 var(--mono);
+  }
+  .node.hot { border-color: oklch(78% 0.15 165 / 0.65); }
+
+  .lane {
+    display: grid;
+    grid-template-columns: 1fr 150px 1fr;
+    gap: 18px;
+    align-items: stretch;
+    margin-top: 34px;
+  }
+  .lane .arrow {
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font: 12px/1.45 var(--mono);
+    text-align: center;
+  }
+  .line {
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--red), var(--green));
+    margin-top: 10px;
+  }
+
+  .code {
+    margin-top: 30px;
+    padding: 22px 24px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: oklch(11% 0.015 235);
+    color: oklch(82% 0.02 250);
+    font: 15px/1.65 var(--mono);
+    max-width: 900px;
+    overflow: auto;
+    white-space: pre-wrap;
+  }
+  .code .prompt { color: var(--muted); }
+  .code .ok { color: var(--green); }
+  .code .warn { color: var(--red); }
+  .code .key { color: var(--yellow); }
+  .code .c { color: var(--muted); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+    font-size: 17px;
+  }
+  th, td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.35;
+  }
+  th {
+    color: var(--muted);
+    font: 700 12px var(--mono);
+  }
+  td:first-child { color: var(--paper); font-weight: 700; }
+  td:last-child { color: var(--green); }
+  td.mid { color: var(--muted); }
+
+  .map {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 18px;
+    margin-top: 34px;
+  }
+  .stack {
+    display: grid;
+    gap: 10px;
+  }
+  .stack-row {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 15px 17px;
+    background: var(--panel);
+    font: 15px/1.35 var(--mono);
+  }
+  .stack-row strong { color: var(--paper); }
+  .stack-row small { display: block; color: var(--muted); margin-top: 5px; }
+
+  .matrix {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 34px;
+  }
+  .cell {
+    min-height: 122px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 15px;
+    background: var(--panel);
+  }
+  .cell b { display: block; font-size: 15px; margin-bottom: 10px; }
+  .cell span { color: var(--muted); font-size: 14px; line-height: 1.35; }
+  .cell.green { border-color: oklch(78% 0.15 165 / 0.5); }
+  .cell.red { border-color: oklch(70% 0.17 34 / 0.5); }
+
+  .footer {
+    position: fixed;
+    z-index: 20;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 88px;
+    color: var(--muted);
+    font: 12px var(--mono);
+  }
+  .progress {
+    position: fixed;
+    z-index: 21;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 0;
+    background: var(--green);
+    transition: width 220ms ease;
+  }
+  kbd {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 2px 7px;
+    color: var(--paper);
+    font: 12px var(--mono);
+  }
+  .track { display: contents; }
+
+  /* ── diagrams (same palette as the shell) ── */
+  .dgm { width: 100%; max-width: 1060px; margin-top: 22px; }
+  .dgm.sm { max-width: 880px; }
+  .dgm svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .dgm .b { fill: var(--panel); stroke: var(--line); stroke-width: 1.2; }
+  .dgm .b.soft { fill: var(--panel-2); }
+  .dgm .b.trust { stroke: oklch(78% 0.15 165 / 0.6); }
+  .dgm .b.untrust { stroke: oklch(70% 0.17 34 / 0.55); }
+  .dgm .b.warn { stroke: oklch(80% 0.12 86 / 0.55); }
+  .dgm .zt { fill: oklch(78% 0.15 165 / 0.05); stroke: oklch(78% 0.15 165 / 0.28); stroke-width: 1; stroke-dasharray: 4 4; }
+  .dgm .zu { fill: oklch(70% 0.17 34 / 0.05); stroke: oklch(70% 0.17 34 / 0.28); stroke-width: 1; stroke-dasharray: 4 4; }
+  .dgm .t { fill: var(--paper); font: 700 18px var(--sans); }
+  .dgm .t.sm { font: 700 15px var(--sans); }
+  .dgm .m { fill: var(--muted); font: 13px var(--mono); }
+  .dgm .m.s { font: 11.5px var(--mono); }
+  .dgm .k { font: 700 11px var(--mono); }
+  .dgm .k.green, .dgm .fg { fill: var(--green); }
+  .dgm .k.red, .dgm .fr { fill: var(--red); }
+  .dgm .k.yellow, .dgm .fy { fill: var(--yellow); }
+  .dgm .k.blue, .dgm .fb { fill: var(--blue); }
+  .dgm .k.muted { fill: var(--muted); }
+  .dgm .fp { fill: var(--paper); }
+  .dgm .edge { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+  .dgm .edge.soft { stroke: var(--line); }
+  .dgm .edge.g { stroke: var(--green); }
+  .dgm .edge.r { stroke: var(--red); }
+  .dgm .ah { fill: var(--muted); }
+  .dgm .ah.g { fill: var(--green); }
+  .dgm .ah.r { fill: var(--red); }
+  .dgm .glow-g { fill: oklch(78% 0.15 165 / 0.1); stroke: var(--green); stroke-width: 1.2; }
+  .dgm .glow-r { fill: oklch(70% 0.17 34 / 0.1); stroke: var(--red); stroke-width: 1.2; }
+  .dgm .glow-y { fill: oklch(80% 0.12 86 / 0.1); stroke: var(--yellow); stroke-width: 1.2; }
+  .dgm .strike { stroke: var(--red); stroke-width: 1.4; }
+
+  .reveal.active [data-r] {
+    animation: rise 440ms ease both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 920px) {
+    .slide { padding: 74px 28px 70px; }
+    .tabs { padding: 0 28px; gap: 18px; }
+    .footer { padding: 0 28px; }
+    h1 { font-size: 56px; }
+    h2 { font-size: 44px; }
+    h3 { font-size: 34px; }
+    .lede { font-size: 19px; }
+    .grid-2, .grid-3, .map, .lane, .compare, .fix-row { grid-template-columns: 1fr; }
+    .flow, .rail, .rail.five, .rail.seven { grid-template-columns: 1fr; }
+    .rail-step::after { display: none; }
+    .node::after { display: none; }
+    .matrix { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media print {
+    @page { size: 1280px 720px; margin: 0; }
+    html, body { height: auto; overflow: visible; }
+    body { background: var(--bg); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tabs, .footer, .progress { display: none; }
+    .deck { position: static; }
+    .slide {
+      position: relative;
+      inset: auto;
+      width: 1280px;
+      height: 720px;
+      opacity: 1 !important;
+      visibility: visible !important;
+      page-break-after: always;
+      break-after: page;
+    }
+    .slide [data-r] { animation: none !important; opacity: 1 !important; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+<nav class="tabs" aria-label="Deck tracks">
+  <button class="tab active" data-track="product">Product</button>
+  <button class="tab" data-track="technical">Technical</button>
+  <button class="tab" data-track="tryit">Try it</button>
+</nav>
+
+<main class="deck" id="deck">
+
+  <!-- ══════════════════════════ PRODUCT ══════════════════════════ -->
+  <div class="track" data-track="product">
+
+<section class="slide reveal active">
+      <div class="frame">
+        <div class="brand" data-r style="--i:0"><span class="mark"></span><span>Siglum</span></div>
+        <h1 data-r style="--i:1">A merge gate you can prove.</h1>
+        <p class="lede wide" data-r style="--i:2">Siglum turns "CI passed" from a claim into evidence anyone can verify: a derived, fail-closed, change-bound verdict, sealed into a signed attestation you can check offline with standard tools.</p>
+        <p class="note" data-r style="--i:3">Open source · Apache-2.0 · built on <strong>Sigstore</strong> and <strong>in-toto/SLSA</strong> · runs in your org, no data leaves it</p>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker red" data-r style="--i:0">THE GAP</p>
+        <h2 data-r style="--i:1">A green check tells you a check concluded. Here is what it leaves open.</h2>
+        <div class="grid-2">
+          <div class="panel red" data-r style="--i:2"><h4>Did the tests actually run?</h4><p>The gate only sees that a status with the expected name showed up on the commit. What ran behind it is invisible.</p></div>
+          <div class="panel red" data-r style="--i:3"><h4>Did they run on this version?</h4><p>An approval or a check from an earlier commit can decorate a newer, different one. Force-push makes this cheap.</p></div>
+          <div class="panel red" data-r style="--i:4"><h4>Was the scanner silently skipped?</h4><p>Path filters, <span class="paper">continue-on-error</span>, and empty artifacts all leave a green-looking box with no validation behind it.</p></div>
+          <div class="panel red" data-r style="--i:5"><h4>Who controlled the rules?</h4><p>If the workflow, policy, or scanner config lives in the pull request, the author being gated also controls the gate.</p></div>
+        </div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker red" data-r style="--i:0">THE ATTACK</p>
+        <h2 data-r style="--i:1">Nothing is forged. The evidence is poisoned, and the check passes for real.</h2>
+        <div class="dgm" data-r style="--i:2">
+          <svg viewBox="0 0 1040 190" role="img" aria-label="Timeline: a contributor edits CI in their own PR, the weakened check goes green for real, and the merge is allowed.">
+            <g class="b untrust"><rect x="20" y="45" width="220" height="80" rx="10"/></g>
+            <g class="b untrust"><rect x="290" y="45" width="220" height="80" rx="10"/></g>
+            <rect class="glow-g" x="560" y="45" width="200" height="80" rx="10"/>
+            <rect class="glow-r" x="810" y="45" width="210" height="80" rx="10"/>
+            <g class="t sm" text-anchor="middle">
+              <text x="130" y="80">PR opens</text>
+              <text x="400" y="80">edits its own gate</text>
+              <text x="660" y="80" class="fg">check: green</text>
+              <text x="915" y="80" class="fr">merge allowed</text>
+            </g>
+            <g class="m s" text-anchor="middle">
+              <text x="130" y="103">push access, agent or human</text>
+              <text x="400" y="103">test cmd · config · workflow</text>
+              <text x="660" y="103">it really ran</text>
+              <text x="915" y="103">validation never happened</text>
+            </g>
+            <g class="edge"><line x1="240" y1="85" x2="284" y2="85"/><line x1="510" y1="85" x2="554" y2="85"/><line x1="760" y1="85" x2="804" y2="85"/></g>
+            <g class="ah"><polygon points="284,85 272,79 272,91"/><polygon points="554,85 542,79 542,91"/><polygon points="804,85 792,79 792,91"/></g>
+          </svg>
+        </div>
+        <div class="callout" data-r style="--i:3">From a real repository audit: the required checks looked locked down, but the workflow that produces them runs <span class="paper">on the pull request</span>. The lock is on the inside of the door.</div>
+        <p class="note" data-r style="--i:4">With AI agents authoring a growing share of pull requests, this trust is extended at machine scale.</p>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker" data-r style="--i:0">FOUR GUARANTEES</p>
+        <h2 data-r style="--i:1">Each one closes a specific way the green check lies.</h2>
+        <div class="matrix">
+          <div class="cell green" data-r style="--i:2"><b>Recomputed from evidence</b><span>The verdict is rederived from what the validators reported. A stored or hand-edited result that does not recompute is rejected.</span><br><br><span class="mono red">stops: "here, take this green status"</span></div>
+          <div class="cell green" data-r style="--i:3"><b>Fail-closed</b><span>A required check that skipped, errored, or returned nothing is never a pass. Missing evidence blocks the merge.</span><br><br><span class="mono red">stops: silently skipping the scanner</span></div>
+          <div class="cell green" data-r style="--i:4"><b>Change-bound</b><span>The verdict is bound to the exact commit being merged, including the merge-queue candidate SHA.</span><br><br><span class="mono red">stops: approve version A, merge version B</span></div>
+          <div class="cell green" data-r style="--i:5"><b>Independent</b><span>Gate-critical validation runs in an org-controlled workflow the PR cannot edit, with every policy input anchored to the protected base.</span><br><br><span class="mono red">stops: editing the gate in your own PR</span></div>
+        </div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker" data-r style="--i:0">HOW IT WORKS</p>
+        <h2 data-r style="--i:1">The author can't grade their own exam.</h2>
+        <div class="dgm" data-r style="--i:2">
+          <svg viewBox="0 0 1040 300" role="img" aria-label="Untrusted gather job produces digest-pinned evidence; the trusted org-controlled seal-enforce job recomputes the verdict, signs it, and posts the check.">
+            <rect class="zu" x="16" y="20" width="420" height="230" rx="12"/>
+            <text class="k red" x="36" y="46">GATHER · UNTRUSTED</text>
+            <g class="b untrust"><rect x="36" y="62" width="380" height="168" rx="10"/></g>
+            <text class="t sm" x="56" y="94">runs over the PR head</text>
+            <g class="m s">
+              <text x="56" y="122">read-only · no secrets · no id-token</text>
+              <text x="56" y="146">produces validator evidence only</text>
+              <text x="56" y="170">cannot assert a verdict, sign,</text>
+              <text x="56" y="188">or post a check</text>
+            </g>
+
+            <g class="edge"><line x1="436" y1="135" x2="590" y2="135"/></g>
+            <g class="ah"><polygon points="590,135 578,129 578,141"/></g>
+            <text class="m s" x="513" y="118" text-anchor="middle">digest-pinned</text>
+            <text class="m s" x="513" y="158" text-anchor="middle">evidence</text>
+
+            <rect class="zt" x="596" y="20" width="428" height="230" rx="12"/>
+            <text class="k green" x="616" y="46">SEAL + ENFORCE · TRUSTED</text>
+            <g class="b trust"><rect x="616" y="62" width="388" height="168" rx="10"/></g>
+            <text class="t sm" x="636" y="94">org-controlled, pinned to the base</text>
+            <g class="m s">
+              <text x="636" y="122">never checks out the PR's code</text>
+              <text x="636" y="146">anchors all policy inputs to base</text>
+              <text x="636" y="170">recomputes the verdict · signs it</text>
+              <text x="636" y="188">posts the source-restricted check</text>
+            </g>
+
+            <text class="m s" x="520" y="284" text-anchor="middle">anything the author edits lands on the untrusted side, and it is consumed only as evidence</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker blue" data-r style="--i:0">THE PROOF</p>
+        <h2 data-r style="--i:1">A signed proof that travels with the change and outlives the CI run.</h2>
+        <div class="grid-3">
+          <div class="panel blue" data-r style="--i:2"><h4>Keyless, via Sigstore</h4><p>Signed with the workflow's own OIDC identity through Fulcio. There are no signing keys for you to generate, rotate, or leak.</p></div>
+          <div class="panel blue" data-r style="--i:3"><h4>An open in-toto predicate</h4><p>The validation sibling of SLSA build provenance: SLSA attests how an artifact was built, Siglum attests that the change was independently validated.</p></div>
+          <div class="panel blue" data-r style="--i:4"><h4>Verifiable offline</h4><p>Anyone with the bundle checks it with <span class="paper">cosign</span> and a strict identity policy. No Siglum service in the loop. Your auditor does the verifying.</p></div>
+        </div>
+        <div class="code" data-r style="--i:5"><span class="prompt">$</span> cosign verify-attestation \
+  --type https://siglum.dev/ValidationAttestation/v0.3 \
+  --certificate-identity-regexp <span class="key">'^https://github.com/your-org/'</span> \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  your-artifact
+<span class="ok">Verification succeeded.</span></div>
+        <p class="note" data-r style="--i:6">Signing runs against <strong>Sigstore staging</strong> today. Production signing is deliberately gated behind explicit review, because it publishes to a permanent public log.</p>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker" data-r style="--i:0">WHERE IT FITS</p>
+        <h2 data-r style="--i:1">It integrates with your stack instead of replacing it.</h2>
+        <table data-r style="--i:2">
+          <tr><th>YOU HAVE</th><th>IT GIVES YOU</th><th>SIGLUM ADDS</th></tr>
+          <tr><td>Branch protection</td><td class="mid">a check concluded</td><td>proof it was real, complete, change-bound, and run under rules the author couldn't edit</td></tr>
+          <tr><td>SLSA / build provenance</td><td class="mid">how the artifact was built</td><td>the validation sibling: the change was independently checked before it merged</td></tr>
+          <tr><td>Scanners</td><td class="mid">findings</td><td>proof they actually ran on this code, and one adjudicated verdict</td></tr>
+          <tr><td>Policy engines</td><td class="mid">async posture enforcement</td><td>the synchronous pre-merge gate with a portable, signed proof</td></tr>
+        </table>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker yellow" data-r style="--i:0">HONEST SCOPE</p>
+        <h2 data-r style="--i:1">What it proves, and what it deliberately does not claim.</h2>
+        <div class="compare">
+          <div class="panel green" data-r style="--i:2"><h4>It proves</h4><p>That a defined set of validators ran to completion over a specific change, under a policy that was fixed and independent of the author for the duration of the assessment, and that the recorded verdict is a pure function of that pinned evidence.</p></div>
+          <div class="panel red" data-r style="--i:3"><h4>It does not claim</h4><p>That your code is safe, your tests are meaningful, or your dependencies are sound. It never judges whether the validation was <em>adequate</em>. And it does not defend against a compromised org administrator, who can turn enforcement off.</p></div>
+        </div>
+        <div class="callout" data-r style="--i:4">The boundary is stated on purpose. A gate that overclaims is just another green badge.</div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker" data-r style="--i:0">OPEN SOURCE POSTURE</p>
+        <h2 data-r style="--i:1">Yours to run, read, and break.</h2>
+        <div class="grid-3">
+          <div class="panel" data-r style="--i:2"><h4>Apache-2.0, vendor-neutral</h4><p>No SaaS, no dashboard, no fleet platform. The gate runs in your org's CI and the proof verifies with standard tooling.</p></div>
+          <div class="panel" data-r style="--i:3"><h4>Builds on Sigstore</h4><p>Signing and transparency come from Sigstore and in-toto rather than a reinvented scheme. Siglum's contribution is the derived, fail-closed, change-bound verdict.</p></div>
+          <div class="panel" data-r style="--i:4"><h4>Claims match the ledger</h4><p>The README build status says exactly what is wired and unit-tested, what only runs live, and what is roadmap. The threat model states the attacker it stops and the one it cannot.</p></div>
+        </div>
+        <p class="note" data-r style="--i:5">Early-stage and honest about it: the decision logic is implemented and tested; production Sigstore and a live end-to-end drill on a real repository are the open roadmap items.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ══════════════════════════ TECHNICAL ══════════════════════════ -->
+  <div class="track" data-track="technical">
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker blue" data-r style="--i:0">TECHNICAL TRACK</p>
+        <h2 data-r style="--i:1">A pure decision core, wrapped in fail-closed shells.</h2>
+        <div class="stack" style="margin-top:34px">
+          <div class="stack-row" data-r style="--i:2"><strong>verdict core</strong> · models, derive, canonical JSON<small>no I/O, one entry point: assess(EvidenceBundle) → verdict · coverage · independence · decision_hash</small></div>
+          <div class="stack-row" data-r style="--i:3"><strong>gate orchestration</strong> · an ordered sequence of fail-closed stops<small>each stop maps to a named attack and posts a legible failing check with the reason</small></div>
+          <div class="stack-row" data-r style="--i:4"><strong>forge seam</strong> · a small Protocol<small>GitHub is one adapter; the whole threat-model suite runs over an in-memory fake</small></div>
+          <div class="stack-row" data-r style="--i:5"><strong>sealing</strong> · Sigstore keyless, optional extra<small>lazy imports, staging-pinned in code; production signing requires an explicit reviewed change</small></div>
+          <div class="stack-row" data-r style="--i:6"><strong>audit + preflight</strong> · pure rules over one normalized RepoConfig<small>the standalone audit, the runtime self-audit, and the setup preflight share the same predicates</small></div>
+        </div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker blue" data-r style="--i:0">THE CORE IDEA</p>
+        <h2 data-r style="--i:1">The verdict is a pure function of the evidence.</h2>
+        <div class="code" data-r style="--i:2"><span class="c"># the one derivation, used by the gate, the offline verifier, and the release check</span>
+assess(bundle) → verdict <span class="key">PASS | FAIL | ERROR</span>
+                 coverage <span class="key">FULL | INCOMPLETE</span>   <span class="c"># any required validator without a definite status → gap</span>
+                 independence <span class="key">SATISFIED | UNMET | NOT_REQUIRED</span>
+                 merge_eligible = PASS <span class="c">and</span> FULL <span class="c">and</span> independence != UNMET
+                 decision_hash = sha256(canonical_json(decision_fields))   <span class="c"># no timestamps, no run ids</span></div>
+        <div class="list">
+          <div class="item" data-r style="--i:3"><span class="bullet">01</span><span>Every consumer that touches a stored decision recomputes it first: deserialization, signing, offline verification, and the release check all rerun <span class="mono">assess()</span> and reject any field that does not recompute.</span></div>
+          <div class="item" data-r style="--i:4"><span class="bullet">02</span><span>The attestation carries the <em>inputs</em>, so it is structurally unable to disagree with its own verdict.</span></div>
+        </div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker blue" data-r style="--i:0">TRUST BOUNDARY, IN DATA</p>
+        <h2 data-r style="--i:1">The gather artifact supplies observations. The base policy decides everything else.</h2>
+        <div class="fix-map">
+          <div class="fix-row" data-r style="--i:2">
+            <div class="bad-side"><b>head-controlled results.json says required=false</b><span>a failing validator laundered as optional</span></div>
+            <div class="arrow-mid">BLOCKED BY</div>
+            <div class="good-side"><b>required comes from the base policy</b><span>the artifact's flag is ignored; the failure counts</span></div>
+          </div>
+          <div class="fix-row" data-r style="--i:3">
+            <div class="bad-side"><b>head deletes a gate-critical validator</b><span>the evidence for it simply never arrives</span></div>
+            <div class="arrow-mid">BLOCKED BY</div>
+            <div class="good-side"><b>absent evidence is filled UNKNOWN</b><span>coverage goes INCOMPLETE and the merge blocks</span></div>
+          </div>
+          <div class="fix-row" data-r style="--i:4">
+            <div class="bad-side"><b>head edits the policy, config, or workflow</b><span>the validation would run under the head's rules</span></div>
+            <div class="arrow-mid">BLOCKED BY</div>
+            <div class="good-side"><b>base anchoring, read by the trusted job</b><span>head digests are derived at the head SHA, never taken from the artifact; any override refuses</span></div>
+          </div>
+        </div>
+        <p class="note" data-r style="--i:5">Duplicate validator ids reject; ids the base policy never declared are ignored. Only base-declared validators can contribute to the verdict.</p>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker blue" data-r style="--i:0">THE STOP SEQUENCE</p>
+        <h2 data-r style="--i:1">Ordered, fail-closed, and each failure posts its reason.</h2>
+        <div class="list" style="max-width:980px">
+          <div class="item" data-r style="--i:2"><span class="bullet">01</span><span><span class="paper">Head still current:</span> the PR is re-fetched with the gate's own token; a head that moved since the event fails closed.</span></div>
+          <div class="item" data-r style="--i:3"><span class="bullet">02</span><span><span class="paper">Hosted runner + approved SHA:</span> a self-hosted runner refuses, and the approved SHA must equal the mergeable subject (the approve-A-then-force-push-B defense).</span></div>
+          <div class="item" data-r style="--i:4"><span class="bullet">03</span><span><span class="paper">Approval proof:</span> a PR needs a current approval bound to its head; a merge queue proves the target branch requires review, else fails closed.</span></div>
+          <div class="item" data-r style="--i:5"><span class="bullet">04</span><span><span class="paper">Base anchoring:</span> every gate-critical input is read at the protected base; a head edit to any of them refuses.</span></div>
+          <div class="item" data-r style="--i:6"><span class="bullet">05</span><span><span class="paper">Verified identity:</span> the gate mints and cryptographically verifies its own OIDC token, then matches the org-pinned gate identity.</span></div>
+          <div class="item" data-r style="--i:7"><span class="bullet">06</span><span><span class="paper">Enforcement self-audit:</span> the run fails unless the <span class="mono">siglum</span> check is actually required and source-restricted to the Siglum App.</span></div>
+          <div class="item" data-r style="--i:8"><span class="bullet">07</span><span><span class="paper">Evidence → verdict → seal:</span> normalize, assess, recompute-verify, then sign and self-verify before any green check is posted.</span></div>
+        </div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker blue" data-r style="--i:0">VERIFIED IDENTITY</p>
+        <h2 data-r style="--i:1">One predicate decides independence, everywhere.</h2>
+        <div class="compare">
+          <div class="panel" data-r style="--i:2"><h4>The token is verified, never trusted</h4><p>The gate mints its own Actions OIDC token and verifies it in core code: algorithm pinned to RS256 in code (no alg:none, no key-type confusion), exact issuer and audience, JWKS host pinned to the issuer, bounded clock skew.</p></div>
+          <div class="panel" data-r style="--i:3"><h4>Then the claims must match the pin</h4><p>Repository, immutable repository id, exact workflow path, a protected branch or tag ref, and a hosted runner. The ref is derived from <span class="paper">job_workflow_ref</span>, so a stated ref is never believed on its own.</p></div>
+        </div>
+        <div class="callout" data-r style="--i:4">The same <span class="mono">gate_identity_mismatch</span> predicate powers the runtime refusal and the recorded independence verdict, so the rule that was enforced and the rule that was recorded can never drift apart.</div>
+        <p class="note" data-r style="--i:5">The adversarial conformance suite rejects alg:none, key confusion, wrong issuer or audience, expiry, bad signatures, and self-hosted runners.</p>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker blue" data-r style="--i:0">SIGN BEFORE GREEN</p>
+        <h2 data-r style="--i:1">There is never a green check without a verified attestation behind it.</h2>
+        <div class="flow">
+          <div class="node" data-r style="--i:2"><b>PASS verdict</b><small>recompute-verified</small></div>
+          <div class="node" data-r style="--i:3"><b>seal</b><small>keyless Fulcio sign · Rekor log (staging)</small></div>
+          <div class="node" data-r style="--i:4"><b>self-verify</b><small>the gate verifies its own bundle against the org-pinned signer identity</small></div>
+          <div class="node hot" data-r style="--i:5"><b>green check</b><small>source-restricted App check-run</small></div>
+          <div class="node" data-r style="--i:6"><b>on any failure</b><small>fail closed: a failing check, never a silent pass</small></div>
+        </div>
+        <p class="note" data-r style="--i:7">Enforcement is self-audited too: a policy that requires independence with missing App credentials fails closed instead of degrading to an unrestricted token. An installed-but-unenforced gate refuses to pretend.</p>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker blue" data-r style="--i:0">THE ATTESTATION</p>
+        <h2 data-r style="--i:1">The attestation cannot lie about its own verdict.</h2>
+        <div class="list">
+          <div class="item" data-r style="--i:2"><span class="bullet">01</span><span>The predicate records the evidence: change SHAs, policy id and hash, every validator's status and artifact digest, the verified run authority, and the expected gate identity.</span></div>
+          <div class="item" data-r style="--i:3"><span class="bullet">02</span><span>A verifier reconstructs the evidence bundle from the predicate and rederives every decision field, including the hash. A stated verdict that does not follow from the recorded evidence rejects.</span></div>
+          <div class="item" data-r style="--i:4"><span class="bullet">03</span><span>Offline verification replays the gate's own authority floor, so an attestation from a self-hosted runner or the wrong repository rejects even with a valid signature.</span></div>
+          <div class="item" data-r style="--i:5"><span class="bullet">04</span><span>A missing or empty identity policy rejects. A valid Sigstore signature by itself is never sufficient.</span></div>
+        </div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker yellow" data-r style="--i:0">BOUNDARY + STATUS DISCIPLINE</p>
+        <h2 data-r style="--i:1">Defended, not defended, and how each claim is labeled.</h2>
+        <div class="compare">
+          <div class="panel green" data-r style="--i:2"><h4>Defended</h4><p>A contributor with push access who can edit CI in their own pull request, without admin or bypass rights. That includes an AI agent operating with those permissions.</p></div>
+          <div class="panel red" data-r style="--i:3"><h4>Out of scope, stated</h4><p>A compromised org administrator. Validators that execute head-authored code (which is why the default gate-critical validator is the read-only secret scan). Whether your validation was adequate.</p></div>
+        </div>
+        <div data-r style="--i:4" style="margin-top:18px">
+          <div class="status-row"><span>decision core · anchoring · identity · enforcement self-audit · approval/TOCTOU · offline verify</span><span class="pill good">WIRED + TESTED</span></div>
+          <div class="status-row"><span>live crypto and API paths: token minting, Sigstore signing, GitHub reads/writes</span><span class="pill wait">LIVE-RUN ONLY</span></div>
+          <div class="status-row"><span>production Sigstore · end-to-end drill on a real repository</span><span class="pill wait">ROADMAP</span></div>
+        </div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker blue" data-r style="--i:0">TEST CULTURE</p>
+        <h2 data-r style="--i:1">The tests mirror the threat model.</h2>
+        <div class="list">
+          <div class="item" data-r style="--i:2"><span class="bullet">✓</span><span>299 tests, strict mypy, and ruff, all green in about two seconds. No network anywhere in the suite.</span></div>
+          <div class="item" data-r style="--i:3"><span class="bullet">✓</span><span>Each attacker move is one test driven end-to-end through the real gate over an in-memory forge: laundering, validator deletion, force-push after approve, token replay, self-hosted runners, duplicate evidence.</span></div>
+          <div class="item" data-r style="--i:4"><span class="bullet">✓</span><span>Adversarial suites for the JWT verifier and the sealing path; malformed inputs fail closed with a posted, legible failing check.</span></div>
+          <div class="item" data-r style="--i:5"><span class="bullet">✓</span><span>Whatever only runs live (signing, token minting, the REST calls) is labeled as such in the docs instead of being faked into a passing unit test.</span></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ══════════════════════════ TRY IT ══════════════════════════ -->
+  <div class="track" data-track="tryit">
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker" data-r style="--i:0">TRY IT · NO GITHUB NEEDED</p>
+        <h2 data-r style="--i:1">Five minutes, entirely on your machine.</h2>
+        <div class="code" data-r style="--i:2"><span class="prompt">$</span> git clone https://github.com/siglum-dev/siglum &amp;&amp; cd siglum
+<span class="prompt">$</span> python -m pip install -e <span class="key">".[dev]"</span>
+
+<span class="c"># generate a fixture repo with a deliberately hollow gate</span>
+<span class="prompt">$</span> siglum demo scaffold --out /tmp/miasma-demo --repo your-org/miasma-demo
+<span class="prompt">$</span> cd /tmp/miasma-demo
+
+<span class="c"># see the gap, then see what a ready install looks like</span>
+<span class="prompt">$</span> siglum audit --config siglum-audit-config.json
+<span class="prompt">$</span> siglum setup check --local .</div>
+        <p class="note" data-r style="--i:3">The scaffold contains the whole story in one directory: a spoofable required check, the Siglum policy and workflows that close it, and the preflight that verifies the install. Nothing needs a token.</p>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker" data-r style="--i:0">TRY IT · YOUR OWN REPO</p>
+        <h2 data-r style="--i:1">Point the audit at a real repository. Read-only.</h2>
+        <div class="code" data-r style="--i:2"><span class="prompt">$</span> export GITHUB_TOKEN=…   <span class="c"># read-only; classic branch protection needs an admin-scope read</span>
+<span class="prompt">$</span> siglum audit --repo your-org/your-repo</div>
+        <div data-r style="--i:3" style="margin-top:22px">
+          <div class="status-row"><span>SPOOFABLE_CHECK · a required check any token with status:write can satisfy</span><span class="pill bad">HIGH</span></div>
+          <div class="status-row"><span>PR_EDITABLE_WORKFLOW · a required check produced by a workflow the PR can rewrite</span><span class="pill bad">HIGH</span></div>
+          <div class="status-row"><span>UNPROTECTED_DEFAULT_BRANCH · no branch protection or ruleset at all</span><span class="pill bad">HIGH</span></div>
+          <div class="status-row"><span>SILENT_SKIP · continue-on-error or path filters can green the check without running it</span><span class="pill wait">MEDIUM</span></div>
+          <div class="status-row"><span>ADMIN_BYPASS · admins can bypass the required checks (noted, not defended)</span><span class="pill wait">LOW</span></div>
+        </div>
+        <p class="note" data-r style="--i:4">Every finding is a fact about your actual configuration that you can verify yourself. <strong>--json</strong> emits the same report for automation; the exit code is 1 when gaps exist.</p>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <p class="kicker" data-r style="--i:0">TRY IT · THE LADDER</p>
+        <h2 data-r style="--i:1">Adopt it one honest rung at a time.</h2>
+        <div class="rail five" data-r style="--i:2">
+          <div class="rail-step"><b>1 · Audit</b><span>see exactly where today's gate is hollow, before changing anything</span></div>
+          <div class="rail-step"><b>2 · Policy</b><span>write <span class="mono">.siglum/policy.toml</span>, check it with <span class="mono">siglum policy lint</span></span></div>
+          <div class="rail-step"><b>3 · Dry-run</b><span>run the gate in your normal CI as a preview verdict</span></div>
+          <div class="rail-step gate"><b>4 · Sealed</b><span>install the App, deploy the org-pinned workflows, require the source-restricted <span class="mono">siglum</span> check</span></div>
+          <div class="rail-step"><b>5 · Release</b><span><span class="mono">siglum release-check</span> requires the proof before anything publishes</span></div>
+        </div>
+        <div class="callout" data-r style="--i:3">The security guarantee is rung 4. Everything before it is an honest preview, and <span class="mono">siglum setup check</span> tells you when the Sealed install is actually real, using the same predicate the runtime enforces.</div>
+      </div>
+    </section>
+
+<section class="slide reveal">
+      <div class="frame">
+        <div class="brand" data-r style="--i:0"><span class="mark"></span><span>Siglum</span></div>
+        <h2 data-r style="--i:1">Read the claims before you trust them.</h2>
+        <div class="list">
+          <div class="item" data-r style="--i:2"><span class="bullet">→</span><span><span class="mono">README · Build status</span> is the ledger: wired and unit-tested, live-run only, or roadmap.</span></div>
+          <div class="item" data-r style="--i:3"><span class="bullet">→</span><span><span class="mono">docs/security/threat-model.md</span> states the attacker model, each defense, and the boundary.</span></div>
+          <div class="item" data-r style="--i:4"><span class="bullet">→</span><span><span class="mono">docs/publish-gate.md</span> explains why merging and publishing are separate gates.</span></div>
+          <div class="item" data-r style="--i:5"><span class="bullet">→</span><span>Apache-2.0 · 299 tests · pure core, small modules, strict types. The gate logic is readable in an afternoon.</span></div>
+        </div>
+        <p class="lede wide" data-r style="--i:6">Siglum exists so "this change was validated" is something you can check yourself. If you can break one of the claims, that is a contribution we want.</p>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+
+<div class="progress" id="progress"></div>
+<footer class="footer">
+  <span>SIGLUM · OPEN SOURCE</span>
+  <span id="counter">01 / 09</span>
+</footer>
+
+<script>
+  const tracks = {};
+  const tabs = [...document.querySelectorAll(".tab")];
+  const counter = document.getElementById("counter");
+  const progress = document.getElementById("progress");
+  let currentTrack = "product";
+
+  document.querySelectorAll(".track").forEach((track) => {
+    tracks[track.dataset.track] = {
+      slides: [...track.querySelectorAll(".slide")],
+      index: 0
+    };
+  });
+
+  function pad(value) { return String(value).padStart(2, "0"); }
+
+  function render() {
+    document.querySelectorAll(".slide").forEach((slide) => slide.classList.remove("active"));
+    const track = tracks[currentTrack];
+    track.slides[track.index].classList.add("active");
+    counter.textContent = pad(track.index + 1) + " / " + pad(track.slides.length);
+    progress.style.width = track.slides.length > 1
+      ? (track.index / (track.slides.length - 1)) * 100 + "%"
+      : "0%";
+    tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.track === currentTrack));
+  }
+
+  function next() {
+    const track = tracks[currentTrack];
+    if (track.index < track.slides.length - 1) { track.index += 1; render(); }
+  }
+  function previous() {
+    const track = tracks[currentTrack];
+    if (track.index > 0) { track.index -= 1; render(); }
+  }
+  function setTrack(name) { if (tracks[name]) { currentTrack = name; render(); } }
+
+  tabs.forEach((tab) => tab.addEventListener("click", () => setTrack(tab.dataset.track)));
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") next();
+    if (event.key === "ArrowLeft" || event.key === "PageUp") previous();
+    if (event.key === "Home") { tracks[currentTrack].index = 0; render(); }
+    if (event.key === "End") { tracks[currentTrack].index = tracks[currentTrack].slides.length - 1; render(); }
+    if (event.key === "1") setTrack("product");
+    if (event.key === "2") setTrack("technical");
+    if (event.key === "3") setTrack("tryit");
+  });
+
+  render();
+</script>
+</body>
+</html>

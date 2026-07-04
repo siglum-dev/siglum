@@ -1,0 +1,31 @@
+# Siglum gates its own pull requests. This is the dry-run / Standard tier: it runs in
+# normal CI, verifies its own Actions OIDC identity, runs the read-only secret-scan
+# validator over the changed files, and posts a `siglum` check-run. It does not sign
+# (that is the Sealed tier) and the check is not required, so this is a preview of the
+# verdict on every pull request. Actions are pinned by commit digest.
+name: siglum-self-gate
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read          # read the base policy and anchored inputs
+  checks: write           # post the `siglum` check-run
+  pull-requests: read     # read the PR head and changed files
+  issues: write           # upsert the explanation comment
+  id-token: write         # mint and verify this job's own Actions OIDC identity
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0   # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1   # v6.3.0
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -e ".[github-app]"
+      - name: siglum gate (dry-run)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SIGLUM_WORKSPACE: ${{ github.workspace }}
+        run: python -m siglum.gate.run

@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "siglum"
+version = "0.1.0"
+description = "A merge gate you can prove: derived, fail-closed, change-bound verdicts sealed as signed in-toto validation attestations (Sigstore/SLSA-native)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+authors = [{ name = "tempo-64" }]
+keywords = ["supply-chain", "attestation", "sigstore", "in-toto", "slsa", "merge-gate", "ci"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = ["pyyaml>=6"]
+
+[project.urls]
+Repository = "https://github.com/siglum-dev/siglum"
+Issues = "https://github.com/siglum-dev/siglum/issues"
+
+[project.scripts]
+siglum = "siglum.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "mypy>=1.11", "ruff>=0.6"]
+sigstore = ["sigstore>=3"]
+github-app = ["cryptography>=42"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/siglum"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+
+# Keep the package fully strict; type-check test bodies for real errors but don't
+# demand annotations on every test function/helper.
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+
+# sigstore is an optional extra, lazily imported inside sealing.* function bodies.
+[[tool.mypy.overrides]]
+module = "sigstore.*"
+ignore_missing_imports = true
+
+# pyyaml ships no inline types; used only by the audit GitHub adapter.
+[[tool.mypy.overrides]]
+module = "yaml.*"
+ignore_missing_imports = true
+
+[tool.ruff]
+src = ["src", "tests"]
+line-length = 100

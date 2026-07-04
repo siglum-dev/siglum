@@ -1,0 +1,16 @@
+# gitleaks config for siglum-v2
+#
+# Siglum's own feature is detecting planted secrets, so its test corpus and the
+# Miasma prevention-drill fixtures necessarily contain a deliberately-fake
+# credential. The string below is a non-secret placeholder (sequential hex), used
+# only to assert that the secret-scan validator FAILS on a planted key. It is not
+# a real AWS credential. Everything else stays under gitleaks' default rules.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known-fake demo/test credential for Siglum's secret-scan feature (not a real secret)"
+regexes = [
+  '''AKIA0123456789ABCDEF''',
+]
