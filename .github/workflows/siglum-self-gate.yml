@@ -11,8 +11,7 @@ on:
 permissions:
   contents: read          # read the base policy and anchored inputs
   checks: write           # post the `siglum` check-run
-  pull-requests: read     # read the PR head and changed files
-  issues: write           # upsert the explanation comment
+  pull-requests: write    # read the PR head and changed files, and upsert the explanation comment
   id-token: write         # mint and verify this job's own Actions OIDC identity
 
 jobs:
