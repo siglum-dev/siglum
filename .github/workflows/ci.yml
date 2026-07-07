@@ -1,0 +1,31 @@
+# Repository CI: tests, lint, and strict types on every push and pull request.
+# Actions are pinned by commit digest (the comment records the release), the same
+# discipline the reference workflows in workflows/ apply.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0   # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1   # v6.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: install
+        run: python -m pip install -e ".[dev,sigstore,github-app]"
+      - name: test
+        run: python -m pytest -q
+      - name: lint
+        run: ruff check src tests
+      - name: types
+        run: mypy
