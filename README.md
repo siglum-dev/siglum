@@ -117,6 +117,8 @@ Early-stage. The GitHub and Sigstore integrations are at different stages of mat
 
 **Roadmap.** Production Sigstore (signing is pinned to staging and refuses production until that path has been reviewed) and an end-to-end run on a real repository.
 
+Siglum grew out of an earlier in-CI evidence check for agent-assisted pull requests. That check ran inside the pull request's own workflow, which is the hole Siglum closes.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the pull-request gates, and the invariants the code holds. To report a vulnerability, see [SECURITY.md](SECURITY.md).
