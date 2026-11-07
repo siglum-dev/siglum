@@ -29,7 +29,7 @@ Issues = "https://github.com/siglum-dev/siglum/issues"
 siglum = "siglum.cli:main"
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "mypy>=1.11", "ruff>=0.6", "cryptography>=42"]
+dev = ["pytest>=8", "mypy>=1.11", "ruff==0.12.12", "cryptography>=42"]
 sigstore = ["sigstore>=3"]
 github-app = ["cryptography>=42"]
 
