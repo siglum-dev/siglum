@@ -123,7 +123,7 @@ Siglum grew out of an earlier in-CI evidence check for agent-assisted pull reque
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the pull-request gates, and the invariants the code holds. To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
-Siglum sits on top of the validators you already run and decides whether their evidence is trustworthy enough to merge, then leaves a signed record of that decision. It runs in your organization's CI; there is no hosted service.
+Siglum decides whether the evidence from a pull request's checks is trustworthy enough to merge, then leaves a signed record of that decision. This version ships one validator, a read-only secret scan. Validators that run code from the pull request need stronger isolation and are not included yet. It runs in your organization's CI; there is no hosted service.
 
 ## License
 
